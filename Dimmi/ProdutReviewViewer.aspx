@@ -30,6 +30,7 @@
         <asp:Label ID="lblReviewed" runat="server" Text="Reviewed"></asp:Label><br />
 
         <asp:LinkButton ID="lbNewerReview" runat="server" OnClick="lbNewerReview_Click">There is a newer version of this review.  Click here to view it.</asp:LinkButton>
+
         <br />
     
     </div>
