@@ -250,10 +250,8 @@
     <Content Include="Images\dimmi64x64black.png" />
     <Content Include="Images\dimmifullbanner800x150.png" />
     <Content Include="libs\MongoDB.Bson.dll" />
-    <Content Include="libs\MongoDB.Bson.pdb" />
     <Content Include="libs\MongoDB.Bson.xml" />
     <Content Include="libs\MongoDB.Driver.dll" />
-    <Content Include="libs\MongoDB.Driver.pdb" />
     <Content Include="libs\MongoDB.Driver.XML" />
     <Content Include="Migrate.aspx" />
     <Content Include="ReviewViewer.aspx" />
