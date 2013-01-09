@@ -2,17 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using MongoDB.Bson;
+using MongoDB.Driver;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Attributes;
+
+
 
 namespace Dimmi.Models
 {
-    public class Image
+    public class Image : BaseEntity
     {
-        public string uid { get; set; }
-        public string name { get; set; }
-        public string data { get; set; }
-        public int type { get; set; }
-        public int @fileType { get; set; }
-        public string fileTypeName { get; set; }
+        public Image()
+        {
+            category = String.Empty;
+        }
+        
+        public string description { get; set; }
+        public byte[] data { get; set; }
+        public string fileType { get; set; }
         public DateTime dateCreated { get; set; }
+        [BsonDefaultValue("")]
+        public string category { get; set; }
+        public int type { get; set; } //only used by some objects.
     }
 }

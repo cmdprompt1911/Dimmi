@@ -40,10 +40,17 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="MongoDB.Bson">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\MongoDB\CSharpDriver 1.7\MongoDB.Bson.dll</HintPath>
+    </Reference>
+    <Reference Include="MongoDB.Driver">
+      <HintPath>..\..\..\..\..\..\..\Program Files (x86)\MongoDB\CSharpDriver 1.7\MongoDB.Driver.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Entity" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.Entity" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -124,23 +131,22 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ImagesController.cs" />
-    <Compile Include="Controllers\ProductReviewsController.cs" />
-    <Compile Include="Controllers\ProductsController.cs" />
+    <Compile Include="Controllers\ReviewsController.cs" />
+    <Compile Include="Controllers\ReviewablesController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
-    <Compile Include="DataInterfaces\IBusinessRepository.cs" />
-    <Compile Include="Data\BusinessRepository.cs" />
     <Compile Include="Data\DataUtil.cs">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="DataInterfaces\IImageRepository.cs" />
     <Compile Include="DataInterfaces\ILogRepository.cs" />
     <Compile Include="Data\ImageRepository.cs" />
-    <Compile Include="DataInterfaces\IProductRepository.cs" />
-    <Compile Include="DataInterfaces\IProductReviewRepository.cs" />
+    <Compile Include="DataInterfaces\IReviewableRepository.cs" />
+    <Compile Include="DataInterfaces\IReviewRepository.cs" />
     <Compile Include="DataInterfaces\IUserRepository.cs" />
     <Compile Include="Data\LogRepository.cs" />
-    <Compile Include="Data\ProductRepository.cs" />
-    <Compile Include="Data\ProductReviewRepository.cs" />
+    <Compile Include="Data\MongoRepository.cs" />
+    <Compile Include="Data\ReviewableRepository.cs" />
+    <Compile Include="Data\ReviewRepository.cs" />
     <Compile Include="Data\UserRepository.cs" />
     <Compile Include="Dimmi.Master.cs">
       <DependentUpon>Dimmi.Master</DependentUpon>
@@ -152,18 +158,31 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\Business.cs" />
-    <Compile Include="Models\Image.cs" />
-    <Compile Include="Models\Log.cs" />
-    <Compile Include="Models\Product.cs" />
-    <Compile Include="Models\ProductReview.cs" />
-    <Compile Include="Models\User.cs" />
-    <Compile Include="ProdutReviewViewer.aspx.cs">
-      <DependentUpon>ProdutReviewViewer.aspx</DependentUpon>
+    <Compile Include="Migrate.aspx.cs">
+      <DependentUpon>Migrate.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="ProdutReviewViewer.aspx.designer.cs">
-      <DependentUpon>ProdutReviewViewer.aspx</DependentUpon>
+    <Compile Include="Migrate.aspx.designer.cs">
+      <DependentUpon>Migrate.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\BaseEntity.cs" />
+    <Compile Include="Models\Comment.cs" />
+    <Compile Include="Models\Like.cs" />
+    <Compile Include="Models\Image.cs" />
+    <Compile Include="Models\Log.cs" />
+    <Compile Include="Models\ReviewableBase.cs" />
+    <Compile Include="Models\ReviewBase.cs" />
+    <Compile Include="Models\ReviewableData.cs" />
+    <Compile Include="Models\Reviewable.cs" />
+    <Compile Include="Models\ReviewData.cs" />
+    <Compile Include="Models\Review.cs" />
+    <Compile Include="Models\User.cs" />
+    <Compile Include="ReviewViewer.aspx.cs">
+      <DependentUpon>ReviewViewer.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ReviewViewer.aspx.designer.cs">
+      <DependentUpon>ReviewViewer.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -228,7 +247,8 @@
     <None Include="Scripts\jquery-1.7.1.intellisense.js" />
     <Content Include="Images\dimmi64x64black.png" />
     <Content Include="Images\dimmifullbanner800x150.png" />
-    <Content Include="ProdutReviewViewer.aspx" />
+    <Content Include="Migrate.aspx" />
+    <Content Include="ReviewViewer.aspx" />
     <Content Include="Scripts\jquery-1.7.1.js" />
     <Content Include="Scripts\jquery-1.7.1.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
@@ -295,7 +315,7 @@
           <AutoAssignPort>True</AutoAssignPort>
           <DevelopmentServerPort>52340</DevelopmentServerPort>
           <DevelopmentServerVPath>/</DevelopmentServerVPath>
-          <IISUrl>http://localhost/Jabber</IISUrl>
+          <IISUrl>http://localhost/DimmiMDB</IISUrl>
           <NTLMAuthentication>False</NTLMAuthentication>
           <UseCustomServer>False</UseCustomServer>
           <CustomServerUrl>

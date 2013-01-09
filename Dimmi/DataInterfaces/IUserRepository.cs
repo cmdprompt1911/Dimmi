@@ -10,9 +10,10 @@ namespace Dimmi.DataInterfaces
     interface IUserRepository
     {
         User Get(string emailAddress);
+        IEnumerable<User> GetList();
         void UpdateLoginTimeStamp(string emailAddress);
-        User UpdateFromFBData(User user);
-        User AddFromFBData(User user);
+        User Update(User user);
+        User Add(User user);
 
     }
 }

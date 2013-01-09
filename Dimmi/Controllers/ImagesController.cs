@@ -9,6 +9,7 @@ using Dimmi.Models;
 using Dimmi.Data;
 using System.IO;
 using Dimmi.DataInterfaces;
+using MongoDB.Bson;
 
 
 namespace Dimmi.Controllers
@@ -17,7 +18,7 @@ namespace Dimmi.Controllers
     {
         static readonly IImageRepository repository = new ImageRepository();
 
-        public HttpResponseMessage Get(string id)
+        public HttpResponseMessage Get(Guid id)
         {
             Image img = repository.Get(id);
             if (img == null)
@@ -26,13 +27,13 @@ namespace Dimmi.Controllers
             }
             else
             {
-                byte[] data = Convert.FromBase64String(img.data);
+                byte[] data = img.data;
 
                 MemoryStream ms = new MemoryStream(data);
                 HttpResponseMessage result = new HttpResponseMessage(HttpStatusCode.OK);
                 result.Content = new ByteArrayContent(data);
                 result.Content.Headers.ContentType =
-                                    new MediaTypeHeaderValue("image/" + img.fileTypeName);
+                                    new MediaTypeHeaderValue("image/" + img.fileType);
 
 
                 //result.Content = new StreamContent(ms);
@@ -45,9 +46,9 @@ namespace Dimmi.Controllers
 
         }
 
-        public IEnumerable<Image> GetCountForEachCategory(int count)
+        public IEnumerable<Image> GetTopForEachCategory(int count)
         {
-            IEnumerable<Image> images = repository.GetCountForEachCategory(count);
+            IEnumerable<Image> images = repository.GetTopForEachCategory();
             if (images == null)
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);

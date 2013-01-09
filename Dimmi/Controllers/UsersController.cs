@@ -15,28 +15,21 @@ namespace Dimmi.Controllers
     {
         static readonly IUserRepository repository = new UserRepository();
 
-        public HttpResponseMessage PostByFB(User user)
+        public HttpResponseMessage PostUser(User user)
         {
             if (user == null)
             {
                 throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
             }
-            repository.UpdateLoginTimeStamp(user.emailAddress);
-            User storedUser = repository.Get(user.emailAddress);
-            if (storedUser == null)
+
+            User check = repository.Get(user.emailAddress);
+            if (check != null)
             {
-                //create it
-                user = repository.AddFromFBData(user);
+                throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
             }
-            else if (DoesFBUserDataNeedUpdated(storedUser, user))
-            {
-                user = repository.UpdateFromFBData(user);
-            }
-            else
-            {
-                user = storedUser;
-            }
-            
+
+            repository.Add(user);
+            user = (User)repository.Get(user.emailAddress);
             var response = Request.CreateResponse<User>(HttpStatusCode.Created, user);
 
             string uri = Url.Link("DefaultApi", new { id = user.id });
@@ -44,7 +37,26 @@ namespace Dimmi.Controllers
             return response;
         }
 
+        public void PutUser(User user)
+        {
+            if (user == null)
+            {
+                throw new HttpResponseException(HttpStatusCode.InternalServerError);
+            }
+            user = (User)repository.Update(user);
+            
+        }
 
+        public User Get(string emailAddress)
+        {
+            return (User)repository.Get(emailAddress);
+        }
+
+        public IEnumerable<User> GetAll()
+        {
+            return repository.GetList();
+        }
+        
         private bool DoesFBUserDataNeedUpdated(User storedUser, User passedUser)
         {
             if (!storedUser.locale.Equals(passedUser.locale)) 
@@ -75,14 +87,7 @@ namespace Dimmi.Controllers
             {
                 return true;
             }
-            if (!storedUser.fBUsername.Equals(passedUser.fBUsername)) 
-            {
-                return true;
-            }
-            if (!storedUser.fBLink.Equals(passedUser.fBLink)) 
-            {
-                return true;
-            }
+           
             return false;
         }
 

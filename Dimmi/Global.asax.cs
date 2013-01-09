@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Dimmi.Models;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -22,6 +25,50 @@ namespace Dimmi
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
+
+            if (!BsonClassMap.IsClassMapRegistered(typeof(BaseEntity)))
+            {
+                BsonClassMap.RegisterClassMap<BaseEntity>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.id)
+                      .SetRepresentation(
+                          BsonType.String);
+                });
+            }
+
+            if (!BsonClassMap.IsClassMapRegistered(typeof(Comment)))
+            {
+                BsonClassMap.RegisterClassMap<Comment>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.commentBy).SetRepresentation(BsonType.String);
+                });
+            }
+
+            if (!BsonClassMap.IsClassMapRegistered(typeof(ReviewBase)))
+            {
+                BsonClassMap.RegisterClassMap<ReviewBase>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.user).SetRepresentation(BsonType.String);
+                    cm.GetMemberMap(c => c.providedByBizId).SetRepresentation(BsonType.String);
+                    
+                });
+            }
+
+
+            if (!BsonClassMap.IsClassMapRegistered(typeof(ReviewableBase)))
+            {
+                BsonClassMap.RegisterClassMap<ReviewableBase>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.parentReviewableId).SetRepresentation(BsonType.String);
+                    cm.GetMemberMap(c => c.hasReviewedId).SetRepresentation(BsonType.String);
+                });
+            }
+
+           
         }
     }
 }
