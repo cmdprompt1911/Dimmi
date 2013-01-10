@@ -135,7 +135,9 @@
     <Compile Include="Controllers\ImagesController.cs" />
     <Compile Include="Controllers\ReviewsController.cs" />
     <Compile Include="Controllers\ReviewablesController.cs" />
+    <Compile Include="Controllers\ReviewStatisticsController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
+    <Compile Include="DataInterfaces\IReviewStatisticsRepository.cs" />
     <Compile Include="Data\DataUtil.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -149,6 +151,7 @@
     <Compile Include="Data\MongoRepository.cs" />
     <Compile Include="Data\ReviewableRepository.cs" />
     <Compile Include="Data\ReviewRepository.cs" />
+    <Compile Include="Data\ReviewStatisticsRepository.cs" />
     <Compile Include="Data\UserRepository.cs" />
     <Compile Include="Dimmi.Master.cs">
       <DependentUpon>Dimmi.Master</DependentUpon>
@@ -178,6 +181,7 @@
     <Compile Include="Models\Reviewable.cs" />
     <Compile Include="Models\ReviewData.cs" />
     <Compile Include="Models\Review.cs" />
+    <Compile Include="Models\ReviewStatistic.cs" />
     <Compile Include="Models\User.cs" />
     <Compile Include="ReviewViewer.aspx.cs">
       <DependentUpon>ReviewViewer.aspx</DependentUpon>

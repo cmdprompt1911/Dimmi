@@ -9,6 +9,7 @@ using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using Dimmi.Data;
 
 namespace Dimmi
 {
@@ -17,6 +18,8 @@ namespace Dimmi
 
     public class WebApiApplication : System.Web.HttpApplication
     {
+        private static DateTime lastRan;
+
         protected void Application_Start()
         {
             AreaRegistration.RegisterAllAreas();
@@ -26,6 +29,31 @@ namespace Dimmi
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
+            RegisterSeralizationMappings();
+
+            RecalculateStats();
+
+           
+        }
+
+        protected void Session_Start(object sender, EventArgs e)
+        {
+            var fiveminAgo = DateTime.Now.AddMinutes(-5);
+            if(lastRan > fiveminAgo)
+            {
+                RecalculateStats();
+            }
+        }
+
+        private void RecalculateStats()
+        {
+            ReviewStatisticsRepository rp = new ReviewStatisticsRepository();
+            rp.Recalculate();
+            lastRan = DateTime.Now;
+        }
+
+        private void RegisterSeralizationMappings()
+        {
             if (!BsonClassMap.IsClassMapRegistered(typeof(BaseEntity)))
             {
                 BsonClassMap.RegisterClassMap<BaseEntity>(cm =>
@@ -55,6 +83,15 @@ namespace Dimmi
                 });
             }
 
+            if (!BsonClassMap.IsClassMapRegistered(typeof(ReviewStatistic)))
+            {
+                BsonClassMap.RegisterClassMap<ReviewStatistic>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.userId).SetRepresentation(BsonType.String);
+                });
+            }
+
             if (!BsonClassMap.IsClassMapRegistered(typeof(ReviewBase)))
             {
                 BsonClassMap.RegisterClassMap<ReviewBase>(cm =>
@@ -62,7 +99,7 @@ namespace Dimmi
                     cm.AutoMap();
                     cm.GetMemberMap(c => c.user).SetRepresentation(BsonType.String);
                     cm.GetMemberMap(c => c.providedByBizId).SetRepresentation(BsonType.String);
-                    
+
                 });
             }
 
@@ -76,8 +113,6 @@ namespace Dimmi
                     cm.GetMemberMap(c => c.hasReviewedId).SetRepresentation(BsonType.String);
                 });
             }
-
-           
         }
     }
 }
