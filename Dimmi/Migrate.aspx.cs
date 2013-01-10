@@ -350,5 +350,50 @@ namespace Dimmi
                 rr.Update(r, Guid.Empty);
             }
         }
+
+        protected void Button6_Click(object sender, EventArgs e)
+        {
+            string x = Guid.NewGuid().ToString();
+            var operations = new BsonDocument[]
+            {
+                new BsonDocument("$match", new BsonDocument("createdDate", new BsonDocument ( "$gte", DateTime.UtcNow.AddDays(-30) ))),
+                //new BsonDocument("$project", new BsonDocument { { "_id", 1 }, { "words", 1 } }),
+                //new BsonDocument("$unwind", "$likes"),
+                //new BsonDocument("$group", new BsonDocument { { "_id", new BsonDocument("tags", "$words") }, { "count", new BsonDocument("$sum", 1) } }),
+                //new BsonDocument("$sort", new BsonDocument("count", 1)),
+                //new BsonDocument("$limit", 5)
+                //new BsonDocument("$project", new BsonDocument { { "_id", 1 }, { "type", 1 }, { "dateCreated", 1 } }),
+                //new BsonDocument("$group", new BsonDocument { { "type", "$type" } }),
+                //new BsonDocument("$sort", new BsonDocument { { "type", -1 }, { "dateCreated", -1 } }),
+                //new BsonDocument("$group", new BsonDocument { { "user", "$userName" }, { "numReviews", new BsonDocument("$sum", 1) }, { "numLikes", new BsonDocument("$sum", "$count") } }),
+                
+                //new BsonDocument("$group", new BsonDocument { { "_id", new BsonDocument("user", "$user") }, { "userName", new BsonDocument("$first", "$userName") }, { "numReviews", new BsonDocument("$sum", 1) }, { "numLikes", new BsonDocument("$sum", "$count") }}),
+                
+                //new BsonDocument("$group", new BsonDocument { { "_id", new BsonDocument("product", "$parentName") }, { "parentId", new BsonDocument("$first", "$parentReviewableId") }, { "numReviews", new BsonDocument("$sum", 1) }, { "composite", new BsonDocument("$avg", "$rating") }}),
+                //new BsonDocument("$project", new BsonDocument { { "id", 1 }, { "type", 1 }, { "dateCreated", 1 } }),
+                //new BsonDocument("$sort", new BsonDocument("dateCreated", -1)),
+                //new BsonDocument("$limit", 5)
+            };
+
+            DBRepository.MongoRepository<Models.ReviewData> _reviewsRepository = new DBRepository.MongoRepository<Models.ReviewData>("Reviews");
+            //DBRepository.MongoRepository<Models.ReviewableData> _reviewablesRepository = new DBRepository.MongoRepository<Models.ReviewableData>("Reviewables");
+
+            var results = _reviewsRepository.Collection.Aggregate(operations);
+            Label1.Text = results.ResultDocuments.ToJson();
+
+            //foreach (BsonDocument doc in results.ResultDocuments)
+            //{
+            //    BsonValue val; // = new BsonObjectId(;
+            //    doc.TryGetValue("parentId", out val);
+            //    Guid o = Guid.Parse(val.AsString);
+            //    ReviewableRepository rr = new ReviewableRepository();
+            //    Reviewable r = rr.Get(o, Guid.Empty);
+            //    doc.TryGetValue("numReviews", out val);
+            //    r.numReviews = val.AsInt32;
+            //    doc.TryGetValue("composite", out val);
+            //    r.compositRating = val.AsDouble;
+            //    rr.Update(r, Guid.Empty);
+            //}
+        }
     }
 }

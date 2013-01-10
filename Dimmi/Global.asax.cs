@@ -46,6 +46,15 @@ namespace Dimmi
                 });
             }
 
+            if (!BsonClassMap.IsClassMapRegistered(typeof(Like)))
+            {
+                BsonClassMap.RegisterClassMap<Like>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.likedBy).SetRepresentation(BsonType.String);
+                });
+            }
+
             if (!BsonClassMap.IsClassMapRegistered(typeof(ReviewBase)))
             {
                 BsonClassMap.RegisterClassMap<ReviewBase>(cm =>

@@ -28,6 +28,8 @@
         <asp:Button ID="Button5" runat="server" OnClick="Button5_Click" Text="Button" />
         <br />
         <br />
+        <asp:Button ID="Button6" runat="server" OnClick="Button6_Click" Text="Button" />
+        <br />
         <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>
     
     </div>
