@@ -291,10 +291,14 @@
     <None Include="Scripts\jquery-1.7.1.intellisense.js" />
     <Content Include="Images\dimmi64x64black.png" />
     <Content Include="Images\dimmifullbanner800x150.png" />
+    <Content Include="libs\BouncyCastle.Crypto.dll" />
+    <Content Include="libs\Ionic.Zip.dll" />
+    <Content Include="libs\Keyczar.dll" />
     <Content Include="libs\MongoDB.Bson.dll" />
     <Content Include="libs\MongoDB.Bson.xml" />
     <Content Include="libs\MongoDB.Driver.dll" />
     <Content Include="libs\MongoDB.Driver.XML" />
+    <Content Include="libs\Newtonsoft.Json.dll" />
     <Content Include="Migrate.aspx" />
     <Content Include="ReviewViewer.aspx" />
     <Content Include="Scripts\jquery-1.7.1.js" />
