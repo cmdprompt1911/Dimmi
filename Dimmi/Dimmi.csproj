@@ -294,6 +294,7 @@
     <Content Include="libs\BouncyCastle.Crypto.dll" />
     <Content Include="libs\Ionic.Zip.dll" />
     <Content Include="libs\Keyczar.dll" />
+    <Content Include="libs\Lucene.Net.dll" />
     <Content Include="libs\MongoDB.Bson.dll" />
     <Content Include="libs\MongoDB.Bson.xml" />
     <Content Include="libs\MongoDB.Driver.dll" />
