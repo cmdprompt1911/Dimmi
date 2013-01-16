@@ -88,7 +88,7 @@ namespace Dimmi.Controllers
             DateTime checkDate = DateTime.Parse(parts[3]);
             if (!checkDate.ToString().Equals(testUser.lastLogin.ToString())) //login timestamps don't match...
                 return false;
-            if (checkDate < DateTime.UtcNow.AddHours(-12)) //session has expired
+            if (checkDate < DateTime.UtcNow.AddHours(-2)) //session has expired
                 return false;
             if (!userObj.id.Equals(testUser.id)) // the user is trying to update a user object other than their own...
                 return false;
