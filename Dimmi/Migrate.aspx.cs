@@ -6,10 +6,11 @@ using System.Web.UI;
 using System.Web.UI.WebControls;
 using Dimmi.Data;
 using Dimmi.DataInterfaces;
-using Dimmi.Models;
+using Dimmi.Models.Domain;
 using System.Data.SqlClient;
 using System.Data;
 using MongoDB.Bson;
+using Dimmi.Search;
 
 namespace Dimmi
 {
@@ -35,9 +36,10 @@ namespace Dimmi
                 dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
-                    User user = new User();
+                    UserData user = new UserData();
                     user.emailAddress = dr.GetString(1);
                     user.lastLogin = dr.GetDateTime(2);
+                    user.createdDate = user.lastLogin.AddDays(-10);
                     user.locale = dr.GetString(3);
                     user.firstName = dr.GetString(4);
                     user.lastName = dr.GetString(5);
@@ -51,8 +53,10 @@ namespace Dimmi
                         user.fBUsername = dr.GetString(10);
                     if (dr.GetValue(11) != DBNull.Value && dr.GetString(11).Trim().Length > 0)
                         user.fBLink = dr.GetString(11);
+                    if (dr.GetValue(12) != DBNull.Value && dr.GetString(12).Trim().Length > 0)
+                        user.oauthId = dr.GetString(12);
 
-                    user = (User)ur.Add(user);
+                    user = (UserData)ur.Add(user);
                     string fbstuff = user.fBLink;
                 }
 
@@ -73,7 +77,7 @@ namespace Dimmi
 
             try
             {
-                ReviewableRepository br = new ReviewableRepository();
+                ReviewableRepository rr = new ReviewableRepository();
                 conn = new SqlConnection(System.Configuration.ConfigurationManager.ConnectionStrings["DataServices"].ConnectionString);
                 conn.Open();
 
@@ -81,21 +85,21 @@ namespace Dimmi
                 dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
-                    Reviewable r = new Reviewable();
+                    ReviewableData r = new ReviewableData();
 
                     r.name = dr.GetString(1);
                     r.reviewableType = "business";
-                    r.images = new List<Models.Image>();
+                    r.images = new string[0];
                     r.issuerCountryCode = "en_us";
                     r.issuerCountry = "United States";
                     r.createdDate = DateTime.UtcNow;
 
-                    br.Add(r, Guid.Empty);
+                    rr.Add(r, Guid.Empty);
                 }
                 dr.Close();
 
-                IEnumerable<Reviewable> bizs = br.Get();
-                foreach (Reviewable biz in bizs)
+                IEnumerable<ReviewableData> bizs = rr.Get();
+                foreach (ReviewableData biz in bizs)
                 {
                     SqlDataReader dr2 = null;
                     string query = @"SELECT top 1 i.uid, i.data, i.fileType, lkift.FileTypeName as imageTypeName, c.Name, 1 as Type, i.dateCreated FROM Image i
@@ -108,7 +112,7 @@ namespace Dimmi
                     dr2 = cmd2.ExecuteReader();
                     while (dr2.Read())
                     {
-                        Models.Image l = new Models.Image();
+                        ImageData l = new ImageData();
                         Guid newId = Guid.NewGuid();
                         l.id = newId;
                         Object data = dr2.GetValue(1);
@@ -119,17 +123,11 @@ namespace Dimmi
                         l.description = dr2.GetValue(4).ToString();
                         l.type = dr2.GetInt32(5);
                         l.dateCreated = dr2.GetDateTime(6);
-
-                        biz.images.Add(l);
-
+                        //now add it to the db
+                        l = rr.AddImage(l, biz.id);
                     }
-                    br.Update(biz, Guid.Empty);
                     dr2.Close();
-
                 }
-
-
-
             }
             finally
             {
@@ -160,7 +158,7 @@ namespace Dimmi
                 dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
-                    Reviewable prod = new Reviewable();
+                    ReviewableData prod = new ReviewableData();
                     prod.name = dr.GetString(1);
                     if (dr.GetValue(2) != DBNull.Value)
                         prod.description = dr.GetString(2);
@@ -179,20 +177,20 @@ namespace Dimmi
 
                     if (dr.GetValue(10) != DBNull.Value)
                     {
-                        Reviewable biz = pr.GetByName(dr.GetString(10), Guid.Empty).First();
+                        ReviewableData biz = pr.GetByName(dr.GetString(10), Guid.Empty).First();
                         prod.parentReviewableId = biz.id;
                         prod.parentName = biz.name;
                     }
                     prod.reviewableType = "product";
-                    prod.images = new List<Models.Image>();
+                    prod.images = new string[0];
                     prod.createdDate = DateTime.UtcNow;
                     pr.Add(prod, Guid.Empty);
 
                 }
                 dr.Close();
 
-                IEnumerable<Reviewable> prods = pr.Get();
-                foreach (Reviewable prod in prods)
+                IEnumerable<ReviewableData> prods = pr.Get();
+                foreach (ReviewableData prod in prods)
                 {
                     SqlDataReader dr2 = null;
                     string query = @"SELECT top 1 i.uid, i.data, i.fileType, lkift.FileTypeName as imageTypeName, p.Name, 2 as Type, i.dateCreated FROM Image i
@@ -205,7 +203,7 @@ namespace Dimmi
                     dr2 = cmd2.ExecuteReader();
                     while (dr2.Read())
                     {
-                        Models.Image l = new Models.Image();
+                        ImageData l = new ImageData();
                         Guid newId = Guid.NewGuid(); //.GenerateNewId();
                         l.id = newId;
                         Object data = dr2.GetValue(1);
@@ -217,16 +215,12 @@ namespace Dimmi
                         l.type = dr2.GetInt32(5);
                         l.dateCreated = dr2.GetDateTime(6);
 
-                        prod.images.Add(l);
+                        pr.AddImage(l, prod.id);
 
                     }
-                    pr.Update(prod, Guid.Empty);
                     dr2.Close();
 
                 }
-
-
-
             }
             finally
             {
@@ -256,10 +250,10 @@ namespace Dimmi
                 dr = cmd.ExecuteReader();
                 while (dr.Read())
                 {
-                    Review prod = new Review();
-                    prod.name = dr.GetString(4);
-                    if (dr.GetValue(5) != DBNull.Value)
-                        prod.description = dr.GetString(5);
+                    ReviewData prod = new ReviewData();
+                    //prod.name = dr.GetString(4);
+                    //if (dr.GetValue(5) != DBNull.Value)
+                    //    prod.description = dr.GetString(5);
                     if (dr.GetValue(6) != DBNull.Value)
                         prod.createdDate = dr.GetDateTime(6);
                     if (dr.GetValue(7) != DBNull.Value)
@@ -281,17 +275,17 @@ namespace Dimmi
 
                     if (dr.GetValue(4) != DBNull.Value)
                     {
-                        Reviewable x = rr.GetByName(dr.GetString(4), Guid.Empty).First();
+                        ReviewableData x = rr.GetByName(dr.GetString(4), Guid.Empty).First();
                         prod.parentReviewableId = x.id;
                         prod.parentName = x.name;
 
 
-                        prod.outsideCode = x.outsideCode;
-                        prod.outsideCodeType = x.outsideCodeType;
-                        prod.issuerCountryCode = x.issuerCountryCode;
-                        prod.issuerCountry = x.issuerCountry;
-                        prod.providedByBizId = x.parentReviewableId;
-                        prod.providedByBizName = x.parentName;
+                        //prod.outsideCode = x.outsideCode;
+                        //prod.outsideCodeType = x.outsideCodeType;
+                        //prod.issuerCountryCode = x.issuerCountryCode;
+                        //prod.issuerCountry = x.issuerCountry;
+                        //prod.providedByBizId = x.parentReviewableId;
+                        //prod.providedByBizName = x.parentName;
 
                     }
                     prod.reviewableType = "product";
@@ -330,8 +324,8 @@ namespace Dimmi
                 //new BsonDocument("$limit", 5)
             };
 
-            DBRepository.MongoRepository<Models.ReviewData> _reviewsRepository = new DBRepository.MongoRepository<Models.ReviewData>("Reviews");
-            DBRepository.MongoRepository<Models.ReviewableData> _reviewablesRepository = new DBRepository.MongoRepository<Models.ReviewableData>("Reviewables");
+            DBRepository.MongoRepository<ReviewData> _reviewsRepository = new DBRepository.MongoRepository<ReviewData>("Reviews");
+            DBRepository.MongoRepository<ReviewableData> _reviewablesRepository = new DBRepository.MongoRepository<ReviewableData>("Reviewables");
 
             var results = _reviewsRepository.Collection.Aggregate(operations);
             Label1.Text = results.ResultDocuments.ToJson();
@@ -342,12 +336,12 @@ namespace Dimmi
                 doc.TryGetValue("parentId", out val);
                 Guid o = Guid.Parse(val.AsString);
                 ReviewableRepository rr = new ReviewableRepository();
-                Reviewable r = rr.Get(o, Guid.Empty);
+                ReviewableData r = rr.Get(o, Guid.Empty);
                 doc.TryGetValue("numReviews", out val);
                 r.numReviews = val.AsInt32;
                 doc.TryGetValue("composite", out val);
                 r.compositRating = val.AsDouble;
-                rr.Update(r, Guid.Empty);
+                rr.Update(r, Guid.Empty, false);
             }
         }
 
@@ -356,6 +350,18 @@ namespace Dimmi
             string x = Guid.NewGuid().ToString();
             ReviewStatisticsRepository rsp = new ReviewStatisticsRepository();
             rsp.Recalculate();
+        }
+
+        protected void Button7_Click(object sender, EventArgs e)
+        {
+            IndexManager.build_lucene_index(this.Application);
+        }
+
+        protected void Button8_Click(object sender, EventArgs e)
+        {
+            IndexManager.searchReviewablesByReviewablesType("Samsung", "business");
+            IndexManager.searchReviewables("Samsung");
+
         }
     }
 }

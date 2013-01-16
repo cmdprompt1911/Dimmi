@@ -5,7 +5,8 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Web.Http;
-using Dimmi.Models;
+using Dimmi.Models.UI;
+using Dimmi.Models.Domain;
 using Dimmi.Data;
 using System.IO;
 using Dimmi.DataInterfaces;
@@ -20,7 +21,7 @@ namespace Dimmi.Controllers
 
         public HttpResponseMessage Get(Guid id)
         {
-            Image img = repository.Get(id);
+            ImageData img = repository.Get(id);
             if (img == null)
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound);
@@ -48,15 +49,14 @@ namespace Dimmi.Controllers
 
         public IEnumerable<Image> GetTopForEachCategory(int count)
         {
-            IEnumerable<Image> images = repository.GetTopForEachCategory();
-            if (images == null)
+            List<ImageData> imagesDatas = (List<ImageData>)repository.GetTopForEachCategory();
+            if (imagesDatas == null)
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
-            else
-            {
-                return images;
-            }
+
+            List<Image> images = AutoMapper.Mapper.Map<List<ImageData>, List<Image>>(imagesDatas);
+            return images;
         }
 
         

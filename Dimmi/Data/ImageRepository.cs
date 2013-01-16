@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Data;
 using System.Data.SqlClient;
-using Dimmi.Models;
+using Dimmi.Models.Domain;
 using Dimmi.DataInterfaces;
 using MongoDB.Driver.Builders;
 using MongoDB.Bson;
@@ -14,23 +14,30 @@ namespace Dimmi.Data
 {
     public class ImageRepository : IImageRepository
     {
-        private readonly DBRepository.MongoRepository<Image> _imageRepository;
+        private readonly DBRepository.MongoRepository<ImageData> _imageRepository;
         private const string TypeDiscriminatorField = "_t";
 
         public ImageRepository()
         {
 
-            _imageRepository = new DBRepository.MongoRepository<Image>("Images");
+            _imageRepository = new DBRepository.MongoRepository<ImageData>("Images");
         }
 
-        public Image Get(Guid id)
+        public ImageData Get(Guid id)
         {
             var query = Query.EQ("_id", id.ToString());
-            Image idata =_imageRepository.Collection.FindOne(query);
+            ImageData idata = _imageRepository.Collection.FindOne(query);
             return idata;
         }
 
-        public Image Add(Image image)
+        public IEnumerable<ImageData> Get(string[] images)
+        {
+            var query = Query.In("_id", new BsonArray(images));
+            List<ImageData> idata = _imageRepository.Collection.Find(query).ToList();
+            return idata;
+        }
+
+        public ImageData Add(ImageData image)
         {
             
             Guid newId = Guid.NewGuid(); //.GenerateNewId();
@@ -39,7 +46,7 @@ namespace Dimmi.Data
             return Get(newId);
         }
 
-        public IEnumerable<Image> GetTopForEachCategory()
+        public IEnumerable<ImageData> GetTopForEachCategory()
         {
 
             var operations = new BsonDocument[]
@@ -73,7 +80,7 @@ namespace Dimmi.Data
             }
 
             var query = Query.In("_id", new BsonArray(ids.ToArray()));
-            List<Image> output = _imageRepository.Collection.Find(query).ToList();
+            List<ImageData> output = _imageRepository.Collection.Find(query).ToList();
 
             return output;
 

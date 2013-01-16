@@ -4,7 +4,7 @@ using System.Linq;
 using System.Web;
 using System.Data;
 using System.Data.SqlClient;
-using Dimmi.Models;
+using Dimmi.Models.Domain;
 using Dimmi.DataInterfaces;
 using MongoDB.Driver.Builders;
 
@@ -14,31 +14,56 @@ namespace Dimmi.Data
 {
     public class UserRepository : IUserRepository
     {
-        private readonly DBRepository.MongoRepository<User> _userRepository;
+        private readonly DBRepository.MongoRepository<UserData> _userRepository;
         private const string TypeDiscriminatorField = "_t";
 
         public UserRepository()
         {
-            _userRepository = new DBRepository.MongoRepository<User>("Users");
+            _userRepository = new DBRepository.MongoRepository<UserData>("Users");
         }
 
-        public IEnumerable<User> GetList()
+        public IEnumerable<UserData> GetList()
         {
-            return _userRepository.Collection.FindAll();
+            List<UserData> users = _userRepository.Collection.FindAll().ToList();
+            return users;
         }
-        
-        public User Get(string emailAddress)
+
+        public UserData Get(string emailAddress)
         {
             var query = Query.EQ("emailAddress", emailAddress);
-            User user = _userRepository.Collection.FindOne(query);
+            UserData user = _userRepository.Collection.FindOne(query);
             return user;
    
         }
 
-        public User GetByName(string name)
+        public UserData GetByUserId(Guid userId)
+        {
+            var query = Query.EQ("_id", userId.ToString());
+            UserData user = _userRepository.Collection.FindOne(query);
+            return user;
+
+        }
+
+        public UserData Get(string oathId, string emailAddress)
+        {
+            var query = Query.And(Query.EQ("emailAddress", emailAddress), Query.EQ("oauthId", oathId));
+            UserData user = _userRepository.Collection.FindOne(query);
+            return user;
+
+        }
+
+        public UserData Get(string oathId, string emailAddress, DateTime lastAccessed)
+        {
+            var query = Query.And(Query.EQ("emailAddress", emailAddress), Query.EQ("oauthId", oathId), Query.EQ("lastLogin", lastAccessed));
+            UserData user = _userRepository.Collection.FindOne(query);
+            return user;
+
+        }
+
+        public UserData GetByName(string name)
         {
             var query = Query.EQ("name", name);
-            User user = _userRepository.Collection.FindOne(query);
+            UserData user = _userRepository.Collection.FindOne(query);
             return user;
         }
 
@@ -47,18 +72,18 @@ namespace Dimmi.Data
         {
             var query = Query.EQ("emailAddress", emailAddress);
 
-            User userToUpdate = Get(emailAddress);
+            UserData userToUpdate = Get(emailAddress);
             userToUpdate.lastLogin = DateTime.UtcNow;
             _userRepository.Collection.Save(userToUpdate);
         }
 
-        public User Add(User user)
+        public UserData Add(UserData user)
         {
             _userRepository.Collection.Insert(user);
             return Get(user.emailAddress);
         }
 
-        public User Update(User user)
+        public UserData Update(UserData user)
         {
             _userRepository.Collection.Save(user);
             return Get(user.emailAddress);

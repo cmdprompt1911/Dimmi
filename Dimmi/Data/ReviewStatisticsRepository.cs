@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using Dimmi.DataInterfaces;
-using Dimmi.Models;
+using Dimmi.Models.Domain;
 using MongoDB.Bson;
 using MongoDB.Driver.Builders;
 
@@ -11,37 +11,41 @@ namespace Dimmi.Data
 {
     public class ReviewStatisticsRepository : IReviewStatisticsRepository
     {
-        DBRepository.MongoRepository<Models.ReviewData> _reviewsRepository;
-        DBRepository.MongoRepository<Models.ReviewStatistic> _allTimeStatsRepository;
-        DBRepository.MongoRepository<Models.ReviewStatistic> _rollingStatsRepository;
+        DBRepository.MongoRepository<ReviewData> _reviewsRepository;
+        DBRepository.MongoRepository<ReviewStatisticData> _allTimeStatsRepository;
+        DBRepository.MongoRepository<ReviewStatisticData> _rollingStatsRepository;
 
         public ReviewStatisticsRepository()
         {
-            _reviewsRepository = new DBRepository.MongoRepository<Models.ReviewData>("Reviews");
-            _allTimeStatsRepository = new DBRepository.MongoRepository<Models.ReviewStatistic>("AllTimeStats");
-            _rollingStatsRepository = new DBRepository.MongoRepository<Models.ReviewStatistic>("Rolling30Stats");
+            _reviewsRepository = new DBRepository.MongoRepository<ReviewData>("Reviews");
+            _allTimeStatsRepository = new DBRepository.MongoRepository<ReviewStatisticData>("AllTimeStats");
+            _rollingStatsRepository = new DBRepository.MongoRepository<ReviewStatisticData>("Rolling30Stats");
         }
 
-        public ReviewStatistic Get(Guid userId)
+        public ReviewStatisticData Get(Guid userId, bool last30days)
         {
             var query = Query.EQ("userId", userId.ToString());
-            return _allTimeStatsRepository.Collection.FindOneAs<ReviewStatistic>(query);
+            if(!last30days)
+                return _allTimeStatsRepository.Collection.FindOneAs<ReviewStatisticData>(query);
+            else
+                return _rollingStatsRepository.Collection.FindOneAs<ReviewStatisticData>(query);
         }
 
-        public List<ReviewStatistic> GetPageFromAllTimeStats(int pageNumber, int pageSize)
+
+        public List<ReviewStatisticData> GetPageFromAllTimeStats(int pageNumber, int pageSize)
         {
 
 
 
             var filter = new BaseFilter() { CurrentPage = pageNumber, ItemsPerPage = pageSize };
-            List<ReviewStatistic> items = GetItemsByFilter(filter,  SortBy.Descending("score"));
+            List<ReviewStatisticData> items = GetItemsByFilter(filter, SortBy.Descending("score"));
             return items;
         }
 
-        public List<ReviewStatistic> GetCurrentTop(int count)
+        public List<ReviewStatisticData> GetCurrentTop(int count)
         {
-            var resultItems = new List<ReviewStatistic>();
-            var cursor = _rollingStatsRepository.Collection.FindAllAs<ReviewStatistic>();
+            var resultItems = new List<ReviewStatisticData>();
+            var cursor = _rollingStatsRepository.Collection.FindAllAs<ReviewStatisticData>();
             cursor.SetSortOrder(SortBy.Descending("score"));
             cursor.SetLimit(count);
             resultItems.AddRange(cursor);
@@ -50,8 +54,9 @@ namespace Dimmi.Data
         
         public void Recalculate()
         {
-            Recalculate30();
             RecalculateAll();
+            Recalculate30();
+            
         }
 
 
@@ -74,14 +79,14 @@ namespace Dimmi.Data
             var results = _reviewsRepository.Collection.Aggregate(operations);
             var results2 = _reviewsRepository.Collection.Aggregate(operations2);
 
-            List<ReviewStatistic> stats = new List<ReviewStatistic>();
+            List<ReviewStatisticData> stats = new List<ReviewStatisticData>();
             //drop the table
             _rollingStatsRepository.Collection.Drop();
 
 
             foreach (BsonDocument doc in results.ResultDocuments)
             {
-                ReviewStatistic stat = new ReviewStatistic();
+                ReviewStatisticData stat = new ReviewStatisticData();
 
                 BsonValue root; // = new BsonObjectId(;
                 doc.TryGetValue("_id", out root);
@@ -116,6 +121,7 @@ namespace Dimmi.Data
             }
             stats.Sort((b, a) => a.score.CompareTo(b.score));
             _rollingStatsRepository.Collection.InsertBatch(stats);
+
         }
 
         private void RecalculateAll()
@@ -141,15 +147,15 @@ namespace Dimmi.Data
             var results = _reviewsRepository.Collection.Aggregate(operations);
             var results2 = _reviewsRepository.Collection.Aggregate(operations2);
 
-            
-            List<ReviewStatistic> stats = new List<ReviewStatistic>();
+
+            List<ReviewStatisticData> stats = new List<ReviewStatisticData>();
             //drop the table
             _allTimeStatsRepository.Collection.Drop();
 
 
             foreach (BsonDocument doc in results.ResultDocuments)
             {
-                ReviewStatistic stat = new ReviewStatistic();
+                ReviewStatisticData stat = new ReviewStatisticData();
 
                 BsonValue root; // = new BsonObjectId(;
                 doc.TryGetValue("_id", out root);
@@ -187,10 +193,10 @@ namespace Dimmi.Data
             _allTimeStatsRepository.Collection.InsertBatch(stats);
         }
 
-        private List<ReviewStatistic> GetItemsByFilter(BaseFilter filter, SortByBuilder sort)
+        private List<ReviewStatisticData> GetItemsByFilter(BaseFilter filter, SortByBuilder sort)
         {
-            var resultItems = new List<ReviewStatistic>();
-            var cursor = _allTimeStatsRepository.Collection.FindAllAs<ReviewStatistic>();
+            var resultItems = new List<ReviewStatisticData>();
+            var cursor = _allTimeStatsRepository.Collection.FindAllAs<ReviewStatisticData>();
            
 
             cursor.SetSortOrder(sort);

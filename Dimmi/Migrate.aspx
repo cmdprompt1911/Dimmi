@@ -30,6 +30,11 @@
         <br />
         <asp:Button ID="Button6" runat="server" OnClick="Button6_Click" Text="Button" />
         <br />
+        <br />
+        <asp:Button ID="Button7" runat="server" OnClick="Button7_Click" Text="Build Index" />
+&nbsp;
+        <asp:Button ID="Button8" runat="server" OnClick="Button8_Click" Text="Search Index" />
+        <br />
         <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>
         <br />
         <asp:Label ID="Label2" runat="server" Text="Label"></asp:Label>

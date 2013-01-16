@@ -4,18 +4,26 @@ using System.Linq;
 using System.Web;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-using Dimmi.Models;
-using Dimmi.Data;
+using Dimmi.Models.UI;
+using Dimmi.Controllers;
+//using Dimmi.Data;
 using System.Web.UI.HtmlControls;
 using Dimmi.DataInterfaces;
+using Dimmi.Models.Domain;
+using Dimmi.Data;
 
 
 namespace Dimmi
 {
     public partial class ReviewViewer : System.Web.UI.Page
     {
-        static readonly ILogRepository logRepository = new LogRepository();
-        static readonly IReviewRepository reviewRepository = new ReviewRepository();
+        //static readonly ImagesController _imagesControler = new ImagesController();
+        //static readonly ReviewsController _reviewControler = new ReviewsController();
+
+        static readonly IReviewRepository _reviewRep = new ReviewRepository();
+        static readonly IReviewableRepository _reviewableRep = new ReviewableRepository();
+        static readonly IImageRepository _imageRep = new ImageRepository();
+
         protected void Page_Load(object sender, EventArgs e)
         {
             string reviewId = "";
@@ -28,24 +36,28 @@ namespace Dimmi
                 try
                 {
 
-                    Review review = reviewRepository.Get(Guid.Parse(reviewId));
+                    ReviewData review = _reviewRep.Get(Guid.Parse(reviewId));
+
+                    ReviewableData reviewable = _reviewableRep.Get(review.parentReviewableId,Guid.Empty);
+
 
                     //log.message = "In Page Load";
                     //log.caller = this.ToString();
                     //logRepository.WriteDataToLog(log);
 
-                    lblProductName.Text = review.name;
-                    lblProductDesc.Text = review.description;
+                    lblProductName.Text = reviewable.name;
+                    lblProductDesc.Text = reviewable.description;
                     lblComments.Text = review.text;
-                    lblCompositeRating.Text = review.compositRating.ToString();
+                    //lblCompositeRating.Text = review.compositRating.ToString();
                     lblReviewed.Text = review.createdDate.ToString();
                     lblReviewer.Text = review.userName;
                     lblUserRating.Text = review.rating.ToString();
-                    if (review.images.Count > 0 )
+                    if (reviewable.images.Length > 0 )
                     {
-                        string type = review.images[0].fileType;
+                        ImageData img = _imageRep.Get(Guid.Parse(reviewable.images[0]));
+                        string type = img.fileType;
 
-                        IBProductImg.ImageUrl = "data:image/" + type + ";base64," + review.images[0].data;
+                        IBProductImg.ImageUrl = "data:image/" + type + ";base64," + img.data;
                         IBProductImg.Visible = true;
                     }
                     else
@@ -54,7 +66,7 @@ namespace Dimmi
                     }
 
 
-                    WriteMetaData(reviewId, review.name, review.description, review.rating, review.text);
+                    WriteMetaData(reviewId, reviewable.name, reviewable.description, review.rating, review.text);
 
                     lbNewerReview.Visible = false;
 
