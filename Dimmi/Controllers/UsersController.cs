@@ -82,7 +82,7 @@ namespace Dimmi.Controllers
             if (testUser == null)
                 return false;
             string[] vectors = new string[] { testUser.sessionMaterial, sessionToken };
-            sessionToken = Crypto.Decrypt(vectors);
+            sessionToken = Crypto.Decrypt(vectors); 
             //oauthId:emailAddress:uid:timestamp
             string[] parts = sessionToken.Split(new char[] { Char.Parse("#") });
             DateTime checkDate = DateTime.Parse(parts[3]);
