@@ -11,6 +11,7 @@ using System.Data.SqlClient;
 using System.Data;
 using MongoDB.Bson;
 using Dimmi.Search;
+using System.Collections;
 
 namespace Dimmi
 {
@@ -359,7 +360,10 @@ namespace Dimmi
 
         protected void Button8_Click(object sender, EventArgs e)
         {
-            IndexManager.searchReviewablesByReviewablesType("Samsung", "business");
+            Hashtable res = IndexManager.searchReviewablesByReviewablesType("Samsung", "business");
+
+            Label1.Text = res.Count.ToString();
+
             IndexManager.searchReviewables("Samsung");
 
         }

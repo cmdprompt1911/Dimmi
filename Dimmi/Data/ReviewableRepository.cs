@@ -54,21 +54,27 @@ namespace Dimmi.Data
 
         public IEnumerable<ReviewableData> GetByName(string name, Guid userId)
         {
-            Hashtable results = Search.IndexManager.searchReviewables(name);
-            string[] ids = new string[results.Count];
-            results.Keys.CopyTo(ids, 0);
-            var query = Query.In("_id", new BsonArray(ids));
-            List<ReviewableData> rdata = _reviewableRepository.Collection.Find(query).ToList();
-            //rdata.Sort(
+            if (System.Configuration.ConfigurationManager.AppSettings["UseLucene"] == "true")
+            {
+                Hashtable results = Search.IndexManager.searchReviewables(name);
+                string[] ids = new string[results.Count];
+                results.Keys.CopyTo(ids, 0);
+                var query = Query.In("_id", new BsonArray(ids));
+                List<ReviewableData> rdata = _reviewableRepository.Collection.Find(query).ToList();
+                return rdata;
+            }
+            else
+            {
 
-            //var keywordRegEx = BsonRegularExpression.Create(name,"-i");
-            //var query = Query.Or(Query.Matches("name", keywordRegEx),
-            //    Query.Matches("description", keywordRegEx),
-            //    Query.Matches("parentName", keywordRegEx));
+                var keywordRegEx = BsonRegularExpression.Create(name, "-i");
+                var query = Query.Or(Query.Matches("name", keywordRegEx),
+                    Query.Matches("description", keywordRegEx),
+                    Query.Matches("parentName", keywordRegEx));
 
-            var result = _reviewableRepository.Collection.FindAs<ReviewableData>(query).ToList();
+                var result = _reviewableRepository.Collection.FindAs<ReviewableData>(query).ToList();
 
-            return result;
+                return result;
+            }
         }
 
         public IEnumerable<ReviewableData> GetByNameByType(string name, string type, Guid userId)
@@ -139,7 +145,8 @@ namespace Dimmi.Data
             _reviewableRepository.Collection.Insert(reviewable);
             
             ReviewableData output = Get(newId, userId);
-            Search.IndexManager.threadproc_update(output);
+            if (System.Configuration.ConfigurationManager.AppSettings["UseLucene"] == "true")
+                Search.IndexManager.threadproc_update(output);
             return output;
         }
 
@@ -150,7 +157,7 @@ namespace Dimmi.Data
             //newRd.images = imgIds.ToArray();
             _reviewableRepository.Collection.Save(reviewable);
             ReviewableData output = Get(reviewable.id, userId);
-            if(updateSearchIndex)
+            if (updateSearchIndex && System.Configuration.ConfigurationManager.AppSettings["UseLucene"] == "true")
                 Search.IndexManager.threadproc_update(output);
             return output;
         }
