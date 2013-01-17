@@ -193,7 +193,7 @@ namespace Dimmi.Controllers
             ReviewData reviewData = AutoMapper.Mapper.Map<Review, ReviewData>(review.review);
             
             
-            if (reviewData.comments.Count == serverData.comments.Count && reviewData.user == review.review.user)
+            if (reviewData.comments.Count == serverData.comments.Count && reviewData.user == review.userId)
                 reviewData.lastModified = DateTime.UtcNow; //review updated, not just added a comment - and the user is the updater...
 
             repository.Update(reviewData);
