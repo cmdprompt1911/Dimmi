@@ -33,6 +33,7 @@ namespace Dimmi.Models.Domain
         public string sessionToken { get; set; }
         [BsonDefaultValue("")]
         public string sessionMaterial { get; set; }
+        public DateTime expires { get; set; }
         [BsonDefaultValue("")]
         public string emailAddress { get; set; }
         public DateTime lastLogin { get; set; }

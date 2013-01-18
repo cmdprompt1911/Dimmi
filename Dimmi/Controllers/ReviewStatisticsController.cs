@@ -18,9 +18,9 @@ namespace Dimmi.Controllers
         static readonly UsersController _usersController = new UsersController();
 
 
-        public ReviewStatistic Get(Guid user, Guid userId, string sessionToken)
+        public ReviewStatistic Get(Guid user)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -38,9 +38,9 @@ namespace Dimmi.Controllers
             return ret;
         }
 
-        public IEnumerable<ReviewStatistic> GetCurrentTop(int count, Guid userId, string sessionToken)
+        public IEnumerable<ReviewStatistic> GetCurrentTop(int count)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -60,9 +60,9 @@ namespace Dimmi.Controllers
             return userStats;
         }
 
-        public IEnumerable<ReviewStatistic> GetPage(int pageNumber, int pageSize, Guid userId, string sessionToken)
+        public IEnumerable<ReviewStatistic> GetPage(int pageNumber, int pageSize)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }

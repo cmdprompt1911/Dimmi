@@ -21,9 +21,9 @@ namespace Dimmi.Controllers
 
         static readonly UsersController _usersController = new UsersController();
 
-        public Review Get(Guid reviewId, Guid userId, string sessionToken)
+        public Review Get(Guid reviewId)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -40,9 +40,9 @@ namespace Dimmi.Controllers
             return review; 
         }
 
-        public IEnumerable<Review> GetByReviewableId(Guid reviewableId, Guid userId, string sessionToken)
+        public IEnumerable<Review> GetByReviewableId(Guid reviewableId)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -58,9 +58,9 @@ namespace Dimmi.Controllers
             return output;
         }
 
-        public IEnumerable<Review> GetByOwner(Guid userId, string sessionToken)
+        public IEnumerable<Review> GetByOwner(Guid userId)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -74,9 +74,9 @@ namespace Dimmi.Controllers
             return output;
         }
 
-        public IEnumerable<Review> GetByOwner(Guid reviewableId, Guid owner, Guid userId, string sessionToken)
+        public IEnumerable<Review> GetByOwner(Guid reviewableId, Guid owner)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -142,19 +142,19 @@ namespace Dimmi.Controllers
             return review;
         }
 
-        public HttpResponseMessage Post(PostPutReview review)
+        public HttpResponseMessage Post(Review review)
         {
-            if (!_usersController.IsUserValid(review.userId, review.sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
 
-            ReviewData check = repository.Get(review.review.id);
+            ReviewData check = repository.Get(review.id);
             if (check != null)
             {
                 throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
             }
-            ReviewData reviewData = AutoMapper.Mapper.Map<Review, ReviewData>(review.review);
+            ReviewData reviewData = AutoMapper.Mapper.Map<Review, ReviewData>(review);
             reviewData = repository.Add(reviewData);
             if (reviewData == null)
             {
@@ -171,7 +171,7 @@ namespace Dimmi.Controllers
 
         }
 
-        public void Put(PostPutReview review)
+        public void Put(Review review)
         {
 
             if (review == null)
@@ -179,21 +179,21 @@ namespace Dimmi.Controllers
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
 
-            if (!_usersController.IsUserValid(review.userId, review.sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
 
-            ReviewData serverData = repository.Get(review.review.id);
+            ReviewData serverData = repository.Get(review.id);
             if (serverData == null) //trying to "update" an object that doesn't exist.
             {
                 throw new HttpResponseException(HttpStatusCode.NotAcceptable);
             }
             
-            ReviewData reviewData = AutoMapper.Mapper.Map<Review, ReviewData>(review.review);
-            
-            
-            if (reviewData.comments.Count == serverData.comments.Count && reviewData.user == review.userId)
+            ReviewData reviewData = AutoMapper.Mapper.Map<Review, ReviewData>(review);
+
+
+            if (reviewData.comments.Count == serverData.comments.Count && reviewData.user == _usersController.GetUserIdFromHeaders(Request))
                 reviewData.lastModified = DateTime.UtcNow; //review updated, not just added a comment - and the user is the updater...
 
             repository.Update(reviewData);

@@ -202,9 +202,6 @@
     <Compile Include="Models\UI\Image.cs" />
     <Compile Include="Models\Log.cs" />
     <Compile Include="Models\Domain\ReviewableData.cs" />
-    <Compile Include="Models\UI\PostPutReview.cs" />
-    <Compile Include="Models\UI\PostPutReviewable.cs" />
-    <Compile Include="Models\UI\PostPutUser.cs" />
     <Compile Include="Models\UI\Reviewable.cs" />
     <Compile Include="Models\UI\Review.cs" />
     <Compile Include="Models\Domain\ReviewStatisticData.cs" />

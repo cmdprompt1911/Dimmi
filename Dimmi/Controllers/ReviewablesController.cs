@@ -24,9 +24,9 @@ namespace Dimmi.Controllers
         static readonly UsersController _usersController = new UsersController();
 
 
-        public Reviewable Get(Guid id, Guid userId, string sessionToken)
+        public Reviewable Get(Guid id, Guid userId)
         {
-            if(!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -43,9 +43,9 @@ namespace Dimmi.Controllers
             return reviewable;
         }
 
-        public IEnumerable<Reviewable> GetByName(string name, Guid userId, string sessionToken)
+        public IEnumerable<Reviewable> GetByName(string name, Guid userId)
         {
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -62,29 +62,31 @@ namespace Dimmi.Controllers
             return reviewables;
         }
 
-        public IEnumerable<Reviewable> GetByNameByType(string name, string type, Guid userId, string sessionToken)
+        public IEnumerable<Reviewable> GetByNameByType(string name, string type)
         {
             
-            if (!_usersController.IsUserValid(userId, sessionToken))
+            //IEnumerable<string> auths2 = Request.Headers.GetValues("userId");
+            
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
 
-            List<ReviewableData> reviewableData = (List<ReviewableData>)repository.GetByNameByType(HttpUtility.UrlDecode(name), type, userId);
+            List<ReviewableData> reviewableData = (List<ReviewableData>)repository.GetByNameByType(HttpUtility.UrlDecode(name), type, _usersController.GetUserIdFromHeaders(Request));
             if (reviewableData == null)
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
 
             List<Reviewable> reviewables = PopulateData(reviewableData);
-            reviewables = GetComputedValues(reviewables, userId);
+            reviewables = GetComputedValues(reviewables, _usersController.GetUserIdFromHeaders(Request));
 
             return reviewables;
         }
 
-        public HttpResponseMessage Post(PostPutReviewable reviewable)
+        public HttpResponseMessage Post(Reviewable reviewable)
         {
-            if (!_usersController.IsUserValid(reviewable.userId, reviewable.sessionToken))
+            if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
@@ -94,13 +96,13 @@ namespace Dimmi.Controllers
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
             //map the reviewable to reviewableData
-            ReviewableData reviewableData = AutoMapper.Mapper.Map<Reviewable, ReviewableData>(reviewable.reviewable);
+            ReviewableData reviewableData = AutoMapper.Mapper.Map<Reviewable, ReviewableData>(reviewable);
 
             //first save the images and store the Guid's
             List<string> ids = new List<string>();
-            if (reviewable.reviewable.images != null)
+            if (reviewable.images != null)
             {
-                foreach (Image i in reviewable.reviewable.images)
+                foreach (Image i in reviewable.images)
                 {
                     Guid newImgId = Guid.NewGuid();
 
@@ -123,17 +125,17 @@ namespace Dimmi.Controllers
             reviewableData.lastModified = reviewableData.createdDate;
 
             //now save the reviewable
-            reviewableData = repository.Add(reviewableData, reviewable.userId);
+            reviewableData = repository.Add(reviewableData, _usersController.GetUserIdFromHeaders(Request));
 
             //now transform the reviewableData back to a reviewable
             AutoMapper.Mapper.CreateMap<ReviewableData, Reviewable>();
-            reviewable.reviewable = AutoMapper.Mapper.Map<ReviewableData, Reviewable>(reviewableData);
+            reviewable = AutoMapper.Mapper.Map<ReviewableData, Reviewable>(reviewableData);
             //reviewable = CopyImagesfromDomainToUI(reviewableData, reviewable);
-            reviewable.reviewable = GetComputedValues(reviewable.reviewable, reviewable.userId);
+            reviewable = GetComputedValues(reviewable, _usersController.GetUserIdFromHeaders(Request));
 
-            var response = Request.CreateResponse<Reviewable>(HttpStatusCode.Created, reviewable.reviewable);
+            var response = Request.CreateResponse<Reviewable>(HttpStatusCode.Created, reviewable);
 
-            string uri = Url.Link("DefaultApi", new { id = reviewable.reviewable.id });
+            string uri = Url.Link("DefaultApi", new { id = reviewable.id });
             response.Headers.Location = new Uri(uri);
             return response;
 

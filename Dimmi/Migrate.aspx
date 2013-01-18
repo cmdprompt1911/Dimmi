@@ -35,6 +35,9 @@
 &nbsp;
         <asp:Button ID="Button8" runat="server" OnClick="Button8_Click" Text="Search Index" />
         <br />
+        <br />
+        <asp:Button ID="Button9" runat="server" OnClick="Button9_Click" Text="Generate Guid" />
+        <br />
         <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>
         <br />
         <asp:Label ID="Label2" runat="server" Text="Label"></asp:Label>

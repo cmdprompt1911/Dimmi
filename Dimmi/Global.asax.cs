@@ -92,7 +92,11 @@ namespace Dimmi
 
             AutoMapper.Mapper.CreateMap<UserData, User>();
             AutoMapper.Mapper.CreateMap<User, UserData>()
-                .ForMember(dto => dto.sessionMaterial, opt => opt.ResolveUsing<SessionMaterialResolver>());
+                .ForMember(dto => dto.sessionMaterial, opt => opt.ResolveUsing<SessionMaterialResolver>())
+                .ForMember(dto => dto.expires, opt => opt.ResolveUsing<SessionExpiresResolver>())
+                .ForMember(dto => dto.sessionToken, opt => opt.ResolveUsing<SessionTokenResolver>())
+                .ForMember(dto => dto.lastLogin, opt => opt.ResolveUsing<LastLoginResolver>())
+                .ForMember(dto => dto.createdDate, opt => opt.ResolveUsing<UserCreatedDateResolver>());
 
             AutoMapper.Mapper.CreateMap<ReviewStatisticData, ReviewStatistic>();
             AutoMapper.Mapper.CreateMap<ReviewStatistic, ReviewStatisticData>();
@@ -238,7 +242,7 @@ namespace Dimmi
             return rd.name;
         }
     }
-
+    
     public class SessionMaterialResolver : ValueResolver<User, string>
     {
         protected override string ResolveCore(User source)
@@ -250,6 +254,57 @@ namespace Dimmi
             else
                 return "";
         }   
+    }
+
+    public class SessionTokenResolver : ValueResolver<User, string>
+    {
+        protected override string ResolveCore(User source)
+        {
+            UserRepository ur = new UserRepository();
+            UserData ud = ur.GetByUserId(source.id);
+            if (ud != null)
+                return ud.sessionToken;
+            else
+                return "";
+        }
+    }
+
+    public class LastLoginResolver : ValueResolver<User, DateTime>
+    {
+        protected override DateTime ResolveCore(User source)
+        {
+            UserRepository ur = new UserRepository();
+            UserData ud = ur.GetByUserId(source.id);
+            
+                return ud.lastLogin;
+            
+                
+        }
+    }
+    public class SessionExpiresResolver : ValueResolver<User, DateTime>
+    {
+        protected override DateTime ResolveCore(User source)
+        {
+            UserRepository ur = new UserRepository();
+            UserData ud = ur.GetByUserId(source.id);
+
+            return ud.expires;
+
+
+        }
+    }
+
+    public class UserCreatedDateResolver : ValueResolver<User, DateTime>
+    {
+        protected override DateTime ResolveCore(User source)
+        {
+            UserRepository ur = new UserRepository();
+            UserData ud = ur.GetByUserId(source.id);
+
+            return ud.createdDate;
+
+
+        }
     }
 
     public class NullStringConverter : TypeConverter<string, string>

@@ -367,5 +367,10 @@ namespace Dimmi
             IndexManager.searchReviewables("Samsung");
 
         }
+
+        protected void Button9_Click(object sender, EventArgs e)
+        {
+            Label1.Text = Guid.NewGuid().ToString();
+        }
     }
 }

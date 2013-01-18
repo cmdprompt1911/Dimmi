@@ -22,6 +22,7 @@ namespace Dimmi.Controllers
 
         public User Get(string sessionRequest, string sessionMaterial)
         {
+                        
             //decrypt the session request
             //request should be in the form of uid:emailaddress -- the UID is from facebook.  If the user exists, the UID will be stored on their account.  can compare the UID and Email to get a valid user
             // then generate a access token based upon the user's UID, email and the LAST timestamp for when the user logged on (update from this method.
@@ -37,34 +38,62 @@ namespace Dimmi.Controllers
             //we have a valid user. 
             //update the lastLogin to NOW
             DateTime dt = DateTime.UtcNow;
-            //now encrypt the three pieces (UID:email:lastLogin)
+            int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
+            DateTime expiration = dt.AddHours(hoursToExpire);
+
+            //now encrypt the three pieces (UID:email:lastLogin:timestamp)
             string toEncrypt = checkUser.oauthId + "#" + checkUser.emailAddress + "#" + checkUser.id + "#" + dt.ToString();
             string[] output = Crypto.Encrypter(toEncrypt);
             //now store the sessionMaterial and the lastlogin
             checkUser.lastLogin = dt;
             checkUser.sessionMaterial = output[0];
             checkUser.sessionToken = output[1];
+            checkUser.expires = expiration;
             checkUser = repository.Update(checkUser);
 
             //now map to UI model...
             User retx = AutoMapper.Mapper.Map<UserData, User>(checkUser);
-            //populate the sessionToken and return;
+            
+            //populate the sessionToken and expiration and return;
             retx.sessionToken = output[1];
+            //retx.expires = expiration;
 
             return retx;
         }
 
-        public bool IsUserValid(Guid userId, string sessionToken)
+        public Guid GetUserIdFromHeaders(HttpRequestMessage request)
         {
+            string[] auths = (string[])request.Headers.GetValues("Session");
+            if (auths.Length == 0)
+                return Guid.Empty;
+
+            string[] total = auths[0].Split(new char[1] { Char.Parse(":") });
+            Guid userId = Guid.Parse(total[0]);
+            return userId;
+        }
+
+        //public bool IsUserValid(Guid userId, string sessionToken)
+        public bool IsUserValid(HttpRequestMessage request)
+        {
+            //get the session and id from the headers
+            string[] auths = (string[])request.Headers.GetValues("Session");
+            if (auths.Length == 0)
+                return false;
+
+            string[] total = auths[0].Split(new char[1] { Char.Parse(":") });
+            Guid userId = Guid.Parse(total[0]);
+            string sessionToken = total[1];
+
             UserData testUser = repository.GetByUserId(userId);
             string[] vectors = new string[] { testUser.sessionMaterial, sessionToken };
             sessionToken = Crypto.Decrypt(vectors);
+            int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
             //oauthId:emailAddress:uid:timestamp
             string[] parts = sessionToken.Split(new char[] { Char.Parse("#") });
             DateTime checkDate = DateTime.Parse(parts[3]);
             if (!checkDate.ToString().Equals(testUser.lastLogin.ToString())) //login timestamps don't match...
                 return false;
-            if (checkDate < DateTime.UtcNow.AddHours(-2)) //session has expired
+            if (checkDate.AddHours(hoursToExpire) <= DateTime.UtcNow) //session has expired
                 return false;
             if (!parts[0].Equals(testUser.oauthId))
                 return false;
@@ -76,19 +105,30 @@ namespace Dimmi.Controllers
             return true;
         }
 
-        private bool IsUserValidToUpdateUser(User userObj, Guid userId, string sessionToken)
+        private bool IsUserValidToUpdateUser(User userObj)
         {
+            //get the session and id from the headers
+            string[] auths = (string[])Request.Headers.GetValues("Session");
+            if (auths.Length == 0)
+                return false;
+
+            string[] total = auths[0].Split(new char[1] { Char.Parse(":") });
+            Guid userId = Guid.Parse(total[0]);
+            string sessionToken = total[1];
+
+
             UserData testUser = repository.GetByUserId(userId);
             if (testUser == null)
                 return false;
             string[] vectors = new string[] { testUser.sessionMaterial, sessionToken };
-            sessionToken = Crypto.Decrypt(vectors); 
+            sessionToken = Crypto.Decrypt(vectors);
+            int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
             //oauthId:emailAddress:uid:timestamp
             string[] parts = sessionToken.Split(new char[] { Char.Parse("#") });
             DateTime checkDate = DateTime.Parse(parts[3]);
             if (!checkDate.ToString().Equals(testUser.lastLogin.ToString())) //login timestamps don't match...
                 return false;
-            if (checkDate < DateTime.UtcNow.AddHours(-2)) //session has expired
+            if (checkDate.AddHours(hoursToExpire) <= DateTime.UtcNow) //session has expired
                 return false;
             if (!userObj.id.Equals(testUser.id)) // the user is trying to update a user object other than their own...
                 return false;
@@ -125,6 +165,9 @@ namespace Dimmi.Controllers
             user.lastLogin = dt;
             user.sessionToken = output[1];
             UserData ret = AutoMapper.Mapper.Map<User, UserData>(user);
+            int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
+            DateTime expiration = dt.AddHours(hoursToExpire);
+            ret.expires = expiration;
             ret.sessionMaterial = output[0];
             ret = repository.Add(ret);
 
@@ -136,19 +179,25 @@ namespace Dimmi.Controllers
             return response;
         }
 
-        public void PutUser(PostPutUser user)//update
+        public void PutUser(User user)//update
         {
             if (user == null)
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
             //checks to make sure the user exists, the user's token is valid and they are trying to update their own user object
-            if (!IsUserValidToUpdateUser(user.user, user.userId, user.sessionToken)) 
+            if (!IsUserValidToUpdateUser(user)) 
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
 
-            UserData ret = AutoMapper.Mapper.Map<User, UserData>(user.user);
+            //UserData checkExpiration = repository.GetByUserId(user.id);
+
+            //int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
+           // DateTime expiration = checkExpiration.lastLogin.AddHours(hoursToExpire);
+
+            UserData ret = AutoMapper.Mapper.Map<User, UserData>(user);
+            //ret.expires = expiration;
             ret = repository.Update(ret);
             User retx = AutoMapper.Mapper.Map<UserData, User>(ret);
 
