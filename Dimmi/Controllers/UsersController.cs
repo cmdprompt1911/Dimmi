@@ -17,20 +17,35 @@ namespace Dimmi.Controllers
 {
     public class UsersController : ApiController
     {
-        static readonly IUserRepository repository = new UserRepository();
-        static readonly IReviewStatisticsRepository stat_repository = new ReviewStatisticsRepository();
+        readonly IUserRepository _repository;
+        static readonly IReviewStatisticsRepository _stat_repository = new ReviewStatisticsRepository();
+        
+        public UsersController()
+        {
+            _repository = new UserRepository();
+        }
 
-        public User Get(string sessionRequest, string sessionMaterial)
+        public UsersController(IUserRepository repository)
+        {
+            this._repository = repository;
+        }
+        
+
+
+
+
+        public virtual User Get(string sessionRequest, string sessionMaterial)
         {
                         
             //decrypt the session request
             //request should be in the form of uid:emailaddress -- the UID is from facebook.  If the user exists, the UID will be stored on their account.  can compare the UID and Email to get a valid user
             // then generate a access token based upon the user's UID, email and the LAST timestamp for when the user logged on (update from this method.
             // they will be requred to pass this access token with every request.  We can then compare it to the three values stored in the db (UID, email, lastaccessed) to determine if this is a valid user.
-            string request = Crypto.Decrypt(new string[] { sessionMaterial, sessionRequest });
+            PathProvider p = new PathProvider();
+            string request = Crypto.Decrypt(new string[] { sessionMaterial, sessionRequest }, p);
             string[] parts = request.Split(new char[] { Char.Parse("#") });
 
-            UserData checkUser = repository.Get(parts[0], parts[1]);
+            UserData checkUser = _repository.Get(parts[0], parts[1]);
             if (checkUser == null)
             {
                 throw new HttpResponseException(HttpStatusCode.NotFound);
@@ -43,13 +58,14 @@ namespace Dimmi.Controllers
 
             //now encrypt the three pieces (UID:email:lastLogin:timestamp)
             string toEncrypt = checkUser.oauthId + "#" + checkUser.emailAddress + "#" + checkUser.id + "#" + dt.ToString();
-            string[] output = Crypto.Encrypter(toEncrypt);
+            
+            string[] output = Crypto.Encrypter(toEncrypt, p);
             //now store the sessionMaterial and the lastlogin
             checkUser.lastLogin = dt;
             checkUser.sessionMaterial = output[0];
             checkUser.sessionToken = output[1];
             checkUser.expires = expiration;
-            checkUser = repository.Update(checkUser);
+            checkUser = _repository.Update(checkUser);
 
             //now map to UI model...
             User retx = AutoMapper.Mapper.Map<UserData, User>(checkUser);
@@ -84,9 +100,10 @@ namespace Dimmi.Controllers
             Guid userId = Guid.Parse(total[0]);
             string sessionToken = total[1];
 
-            UserData testUser = repository.GetByUserId(userId);
+            UserData testUser = _repository.GetByUserId(userId);
             string[] vectors = new string[] { testUser.sessionMaterial, sessionToken };
-            sessionToken = Crypto.Decrypt(vectors);
+            PathProvider p = new PathProvider();
+            sessionToken = Crypto.Decrypt(vectors, p);
             int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
             //oauthId:emailAddress:uid:timestamp
             string[] parts = sessionToken.Split(new char[] { Char.Parse("#") });
@@ -117,11 +134,12 @@ namespace Dimmi.Controllers
             string sessionToken = total[1];
 
 
-            UserData testUser = repository.GetByUserId(userId);
+            UserData testUser = _repository.GetByUserId(userId);
             if (testUser == null)
                 return false;
             string[] vectors = new string[] { testUser.sessionMaterial, sessionToken };
-            sessionToken = Crypto.Decrypt(vectors);
+            PathProvider p = new PathProvider();
+            sessionToken = Crypto.Decrypt(vectors,p);
             int hoursToExpire = int.Parse(System.Configuration.ConfigurationManager.AppSettings["SessionExpireHours"]);
             //oauthId:emailAddress:uid:timestamp
             string[] parts = sessionToken.Split(new char[] { Char.Parse("#") });
@@ -150,7 +168,7 @@ namespace Dimmi.Controllers
                 throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
             }
 
-            UserData check = repository.Get(user.emailAddress);
+            UserData check = _repository.Get(user.emailAddress);
             if (check != null)
             {
                 throw new HttpResponseException(HttpStatusCode.MethodNotAllowed);
@@ -160,7 +178,8 @@ namespace Dimmi.Controllers
             DateTime dt = DateTime.UtcNow;
             //now encrypt the three pieces (UID:email:lastLogin)
             string toEncrypt = user.oauthId + "#" + user.emailAddress + "#" + user.id + "#" + dt.ToString();
-            string[] output = Crypto.Encrypter(toEncrypt);
+            PathProvider p = new PathProvider();
+            string[] output = Crypto.Encrypter(toEncrypt, p);
             //now store the sessionMaterial and the lastlogin
             user.lastLogin = dt;
             user.sessionToken = output[1];
@@ -169,7 +188,7 @@ namespace Dimmi.Controllers
             DateTime expiration = dt.AddHours(hoursToExpire);
             ret.expires = expiration;
             ret.sessionMaterial = output[0];
-            ret = repository.Add(ret);
+            ret = _repository.Add(ret);
 
             User retx = AutoMapper.Mapper.Map<UserData, User>(ret);
             var response = Request.CreateResponse<User>(HttpStatusCode.Created, retx);
@@ -198,7 +217,7 @@ namespace Dimmi.Controllers
 
             UserData ret = AutoMapper.Mapper.Map<User, UserData>(user);
             //ret.expires = expiration;
-            ret = repository.Update(ret);
+            ret = _repository.Update(ret);
             User retx = AutoMapper.Mapper.Map<UserData, User>(ret);
 
 
@@ -216,7 +235,7 @@ namespace Dimmi.Controllers
 
         public IEnumerable<User> GetAll(string sessionToken)
         {
-            List<UserData> result = (List<UserData>)repository.GetList();
+            List<UserData> result = (List<UserData>)_repository.GetList();
             List<User> users = new List<Models.UI.User>();
             foreach (UserData ud in result)
             {

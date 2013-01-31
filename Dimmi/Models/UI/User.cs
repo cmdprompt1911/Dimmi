@@ -12,10 +12,10 @@ namespace Dimmi.Models.UI
 {
     public class User : BaseEntity
     {
-        public string sessionToken { get; set; }
-        public DateTime expires { get; set; }
-        public string oauthId { get; set; }
-        public string emailAddress { get; set; }
+        public virtual string sessionToken { get; set; }
+        public virtual DateTime expires { get; set; }
+        public virtual string oauthId { get; set; }
+        public virtual string emailAddress { get; set; }
         public DateTime lastLogin { get; set; }
         public DateTime createdDate { get; set; }
         public string locale { get; set; }

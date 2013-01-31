@@ -38,6 +38,9 @@
         <br />
         <asp:Button ID="Button9" runat="server" OnClick="Button9_Click" Text="Generate Guid" />
         <br />
+        <br />
+        <asp:Button ID="Button10" runat="server" OnClick="Button10_Click" Text="CalculateMonth" />
+        <br />
         <asp:Label ID="Label1" runat="server" Text="Label"></asp:Label>
         <br />
         <asp:Label ID="Label2" runat="server" Text="Label"></asp:Label>

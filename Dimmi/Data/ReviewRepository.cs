@@ -17,6 +17,7 @@ namespace Dimmi.Data
         private readonly DBRepository.MongoRepository<ReviewData> _reviewRepository;
         private readonly DBRepository.MongoRepository<ImageData> _imagesRepository;
         private readonly DBRepository.MongoRepository<ReviewableData> _reviewableRepository;
+        private ReviewStatisticsRepository _rsr;
         private ReviewableRepository _rr;
 
         public ReviewRepository()
@@ -25,6 +26,7 @@ namespace Dimmi.Data
             _imagesRepository = new DBRepository.MongoRepository<ImageData>("Images");
             _reviewableRepository = new DBRepository.MongoRepository<ReviewableData>("Reviewables");
             _rr = new ReviewableRepository();
+            _rsr = new ReviewStatisticsRepository();
         }
 
 
@@ -129,6 +131,8 @@ namespace Dimmi.Data
             
             _reviewRepository.Collection.Save(review);
             _rr.UpdateStatistics(review.parentReviewableId);
+            _rsr.Recalculate();
+            
             return Get(review.id);
         }
 

@@ -150,11 +150,12 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\CurrentMonthStatisticsController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ImagesController.cs" />
     <Compile Include="Controllers\ReviewsController.cs" />
     <Compile Include="Controllers\ReviewablesController.cs" />
-    <Compile Include="Controllers\ReviewStatisticsController.cs" />
+    <Compile Include="Controllers\AllTimeStatisticsController.cs" />
     <Compile Include="Controllers\UsersController.cs" />
     <Compile Include="DataInterfaces\IReviewStatisticsRepository.cs" />
     <Compile Include="Data\DataUtil.cs">
@@ -193,6 +194,7 @@
     </Compile>
     <Compile Include="Models\BaseEntity.cs" />
     <Compile Include="Models\Domain\LikeData.cs" />
+    <Compile Include="Models\Domain\MonthlyUserStatisticData.cs" />
     <Compile Include="Models\Domain\UserData.cs" />
     <Compile Include="Models\UI\Comment.cs" />
     <Compile Include="Models\Domain\CommentData.cs" />
@@ -202,11 +204,12 @@
     <Compile Include="Models\UI\Image.cs" />
     <Compile Include="Models\Log.cs" />
     <Compile Include="Models\Domain\ReviewableData.cs" />
+    <Compile Include="Models\UI\MonthlyUserStatistic.cs" />
     <Compile Include="Models\UI\Reviewable.cs" />
     <Compile Include="Models\UI\Review.cs" />
-    <Compile Include="Models\Domain\ReviewStatisticData.cs" />
+    <Compile Include="Models\Domain\UserStatisticData.cs" />
     <Compile Include="Models\UI\User.cs" />
-    <Compile Include="Models\UI\ReviewStatistic.cs" />
+    <Compile Include="Models\UI\UserStatistic.cs" />
     <Compile Include="ReviewViewer.aspx.cs">
       <DependentUpon>ReviewViewer.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -215,13 +218,6 @@
       <DependentUpon>ReviewViewer.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestEncryption.aspx.cs">
-      <DependentUpon>TestEncryption.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="TestEncryption.aspx.designer.cs">
-      <DependentUpon>TestEncryption.aspx</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\themes\base\images\ui-bg_flat_0_aaaaaa_40x100.png" />
@@ -313,8 +309,9 @@
     <Content Include="Scripts\knockout-2.1.0.debug.js" />
     <Content Include="Scripts\knockout-2.1.0.js" />
     <Content Include="Scripts\modernizr-2.5.3.js" />
-    <Content Include="TestEncryption.aspx" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </Content>

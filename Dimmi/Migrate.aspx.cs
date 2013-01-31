@@ -372,5 +372,11 @@ namespace Dimmi
         {
             Label1.Text = Guid.NewGuid().ToString();
         }
+
+        protected void Button10_Click(object sender, EventArgs e)
+        {
+            ReviewStatisticsRepository rsr = new ReviewStatisticsRepository();
+            rsr.Recalculate();
+        }
     }
 }

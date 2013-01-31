@@ -98,8 +98,11 @@ namespace Dimmi
                 .ForMember(dto => dto.lastLogin, opt => opt.ResolveUsing<LastLoginResolver>())
                 .ForMember(dto => dto.createdDate, opt => opt.ResolveUsing<UserCreatedDateResolver>());
 
-            AutoMapper.Mapper.CreateMap<ReviewStatisticData, ReviewStatistic>();
-            AutoMapper.Mapper.CreateMap<ReviewStatistic, ReviewStatisticData>();
+            AutoMapper.Mapper.CreateMap<UserStatisticData, UserStatistic>();
+            AutoMapper.Mapper.CreateMap<UserStatistic, UserStatisticData>();
+
+            AutoMapper.Mapper.CreateMap<MonthlyUserStatisticData, MonthlyUserStatistic>();
+            AutoMapper.Mapper.CreateMap<MonthlyUserStatistic, MonthlyUserStatisticData>();
 
             AutoMapper.Mapper.CreateMap<LikeData, Like>();
             AutoMapper.Mapper.CreateMap<Like, LikeData>();
@@ -134,6 +137,15 @@ namespace Dimmi
                 });
             }
 
+            if (!BsonClassMap.IsClassMapRegistered(typeof(MonthlyUserStatisticData)))
+            {
+                BsonClassMap.RegisterClassMap<MonthlyUserStatisticData>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.userId).SetRepresentation(BsonType.String);
+                });
+            }
+
             if (!BsonClassMap.IsClassMapRegistered(typeof(LikeData)))
             {
                 BsonClassMap.RegisterClassMap<LikeData>(cm =>
@@ -143,9 +155,9 @@ namespace Dimmi
                 });
             }
 
-            if (!BsonClassMap.IsClassMapRegistered(typeof(ReviewStatisticData)))
+            if (!BsonClassMap.IsClassMapRegistered(typeof(UserStatisticData)))
             {
-                BsonClassMap.RegisterClassMap<ReviewStatisticData>(cm =>
+                BsonClassMap.RegisterClassMap<UserStatisticData>(cm =>
                 {
                     cm.AutoMap();
                     cm.GetMemberMap(c => c.userId).SetRepresentation(BsonType.String);

@@ -11,25 +11,25 @@ using Dimmi.DataInterfaces;
 using MongoDB.Bson;
 namespace Dimmi.Controllers
 {
-    public class ReviewStatisticsController : ApiController
+    public class AllTimeStatisticsController : ApiController
     {
         static readonly IReviewStatisticsRepository repository = new ReviewStatisticsRepository();
 
         static readonly UsersController _usersController = new UsersController();
 
 
-        public ReviewStatistic Get(Guid user)
+        public UserStatistic Get(Guid userId)
         {
             if (!_usersController.IsUserValid(Request))
             {
                 throw new HttpResponseException(HttpStatusCode.Unauthorized);
             }
 
-            ReviewStatisticData allTime = repository.Get(user, false);
-            ReviewStatisticData last30 = repository.Get(user, true);
+            UserStatisticData allTime = repository.GetAllTimeForUser(userId);
+            MonthlyUserStatisticData month = repository.GetMonthlyForUser(userId, DateTime.UtcNow.Month, DateTime.UtcNow.Year);
 
-            ReviewStatistic ret = AutoMapper.Mapper.Map<ReviewStatisticData, ReviewStatistic>(allTime);
-            ret.Last30Score = last30.score;
+            UserStatistic ret = AutoMapper.Mapper.Map<UserStatisticData, UserStatistic>(allTime);
+            ret.currentMonthScore = month.score;
 
             if (ret == null)
             {
@@ -38,7 +38,7 @@ namespace Dimmi.Controllers
             return ret;
         }
 
-        public IEnumerable<ReviewStatistic> GetCurrentTop(int count)
+        public IEnumerable<UserStatistic> GetCurrentTop(int count)
         {
             if (!_usersController.IsUserValid(Request))
             {
@@ -49,18 +49,18 @@ namespace Dimmi.Controllers
             {
                 throw new HttpResponseException(HttpStatusCode.NotAcceptable);
             }
-            IEnumerable<ReviewStatisticData> statisticData = repository.GetCurrentTop(count);
-            AutoMapper.Mapper.CreateMap<IEnumerable<ReviewStatisticData>, IEnumerable<ReviewStatistic>>();
-            IEnumerable<ReviewStatistic> userStats = AutoMapper.Mapper.Map<IEnumerable<ReviewStatisticData>, IEnumerable<ReviewStatistic>>(statisticData);
+            List<UserStatisticData> statisticData = repository.GetCurrentTop(count);
 
-            if (statisticData == null)
+            List<UserStatistic> stats = PopulateData(statisticData);
+
+            if (stats == null)
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
-            return userStats;
+            return stats;
         }
 
-        public IEnumerable<ReviewStatistic> GetPage(int pageNumber, int pageSize)
+        public IEnumerable<UserStatistic> GetPage(int pageNumber, int pageSize)
         {
             if (!_usersController.IsUserValid(Request))
             {
@@ -72,15 +72,34 @@ namespace Dimmi.Controllers
                 throw new HttpResponseException(HttpStatusCode.NotAcceptable);
             }
 
-            IEnumerable < ReviewStatisticData > statisticData = repository.GetPageFromAllTimeStats(pageNumber, pageSize);
-            AutoMapper.Mapper.CreateMap<IEnumerable<ReviewStatisticData>, IEnumerable<ReviewStatistic>>();
-            IEnumerable<ReviewStatistic> stats = AutoMapper.Mapper.Map<IEnumerable<ReviewStatisticData>, IEnumerable<ReviewStatistic>>(statisticData);
+            List < UserStatisticData > statisticData = repository.GetPageFromAllTimeStats(pageNumber, pageSize);
+
+            List<UserStatistic> stats = PopulateData(statisticData);
 
             if (statisticData == null)
             {
                 throw new HttpResponseException(HttpStatusCode.InternalServerError);
             }
             return stats;
+        }
+
+        private List<UserStatistic> PopulateData(List<UserStatisticData> statdata)
+        {
+
+
+            List<UserStatistic> output = new List<UserStatistic>();
+            foreach (UserStatisticData rd in statdata)
+            {
+                output.Add(PopulateData(rd));
+            }
+            return output;
+        }
+
+        private UserStatistic PopulateData(UserStatisticData statData)
+        {
+
+            UserStatistic stat = AutoMapper.Mapper.Map<UserStatisticData, UserStatistic>(statData);
+            return stat;
         }
 
     }

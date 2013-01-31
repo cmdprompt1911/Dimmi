@@ -7,7 +7,7 @@ using Dimmi.Models.Domain;
 
 namespace Dimmi.DataInterfaces
 {
-    interface IUserRepository
+    public interface IUserRepository
     {
         UserData Get(string emailAddress);
         UserData Get(string oathId, string emailAddress);

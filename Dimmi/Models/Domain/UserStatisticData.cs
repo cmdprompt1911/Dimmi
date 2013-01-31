@@ -6,13 +6,17 @@ using System.Web;
 
 namespace Dimmi.Models.Domain
 {
-    public class ReviewStatisticData : BaseEntity
+    public class UserStatisticData : BaseEntity
     {
-        public ReviewStatisticData()
+        public UserStatisticData()
         {
             numReviews = 0;
             numLikes = 0;
             score = 0;
+            rank = 0;
+            mvp1Count = 0;
+            mvp2Count = 0;
+            mvp3Count = 0;
         }
 
         public Guid userId { get; set; }
@@ -21,5 +25,9 @@ namespace Dimmi.Models.Domain
         public int numReviews { get; set; }
         public int numLikes { get; set; }
         public int score { get; set; }
+        public int rank { get; set; }
+        public int mvp1Count { get; set; }
+        public int mvp2Count { get; set; }
+        public int mvp3Count { get; set; }
     }
 }

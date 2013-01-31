@@ -8,9 +8,12 @@ namespace Dimmi.DataInterfaces
 {
     public interface IReviewStatisticsRepository
     {
-        ReviewStatisticData Get(Guid userId, bool last30days);
-        List<ReviewStatisticData> GetPageFromAllTimeStats(int pageNumber, int pageSize);
-        List<ReviewStatisticData> GetCurrentTop(int count);
+        UserStatisticData GetAllTimeForUser(Guid userId);
+        MonthlyUserStatisticData GetMonthlyForUser(Guid userId, int month, int year);
+        List<MonthlyUserStatisticData> GetMonthlyForUser(Guid userId);
+        List<UserStatisticData> GetPageFromAllTimeStats(int pageNumber, int pageSize);
+        List<MonthlyUserStatisticData> GetPageFromMonthlyStats(int pageNumber, int pageSize, int month, int year);
+        List<UserStatisticData> GetCurrentTop(int count);
         void Recalculate();
     }
 }

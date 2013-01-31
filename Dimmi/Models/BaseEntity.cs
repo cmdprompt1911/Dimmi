@@ -13,7 +13,7 @@ namespace Dimmi.Models
     public abstract class BaseEntity
     {
         [BsonId]
-        public Guid id
+        public virtual Guid id
         {
             get;
             set;

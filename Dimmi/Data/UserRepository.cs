@@ -44,7 +44,7 @@ namespace Dimmi.Data
 
         }
 
-        public UserData Get(string oathId, string emailAddress)
+        public virtual UserData Get(string oathId, string emailAddress)
         {
             var query = Query.And(Query.EQ("emailAddress", emailAddress), Query.EQ("oauthId", oathId));
             UserData user = _userRepository.Collection.FindOne(query);
